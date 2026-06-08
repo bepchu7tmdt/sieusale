@@ -108,6 +108,10 @@
     z-index: 2;
     animation: autoShimmerEffect 4s infinite ease-in-out;
 }
+/* Kích hoạt hiệu ứng rung lắc chuẩn tên lớp floating-cart của anh */
+.floating-cart.shake-active {
+    animation: cartButtonShake 1.2s ease-in-out;
+}
 
 @keyframes autoShimmerEffect {
     0% { left: -150%; }
@@ -264,6 +268,85 @@
         .floating-cart-btn { position: fixed; bottom: 95px; right: 20px; background: linear-gradient(135deg, var(--primary-red), #be123c); color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4); z-index: 1200; cursor: pointer; border: 3px solid #fff; }
         .floating-cart-btn .cart-count { position: absolute; top: -4px; right: -4px; background: var(--gold-glow); color: #000; font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 1px solid white; }
 
+        /* --- CSS HOÀN CHỈNH CHO BANNER NHẮC NHỞ GIỎ HÀNG BẾP CHÚ 7 --- */
+.cart-reminder-toast {
+    position: fixed;
+    bottom: -100px; /* Ẩn tạm thời dưới đáy màn hình */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 450px;
+    background: #1e293b; /* Nền tối sang trọng */
+    color: #ffffff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 999999; /* Luôn nổi lên trên cùng, chấp mọi layer */
+    transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1.5px solid #f97316; /* Viền cam thương hiệu */
+}
+
+.cart-reminder-toast.show {
+    bottom: 24px; /* Trượt hiển thị lên cách đáy màn hình 24px */
+}
+
+.cart-reminder-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    padding-right: 8px;
+}
+
+.cart-reminder-content i {
+    color: #f97316;
+    font-size: 18px;
+    animation: bellRing 1.5s infinite;
+}
+
+.btn-open-cart-now {
+    background: #f97316;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.close-reminder-x {
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+}
+
+/* Hiệu ứng rung lắc nút giỏ hàng cố định */
+.floating-cart.shake-active, .floating-cart-btn.shake-active {
+    animation: cartButtonShake 1.2s ease-in-out;
+}
+
+@keyframes cartButtonShake {
+    0%, 100% { transform: scale(1); }
+    10%, 30% { transform: scale(1.1) rotate(-5deg); }
+    20%, 40% { transform: scale(1.1) rotate(5deg); }
+    50% { transform: scale(1.05) rotate(-3deg); }
+    60% { transform: scale(1.05) rotate(3deg); }
+    70% { transform: scale(1) rotate(0); }
+}
+
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0); }
+    10%, 30% { transform: rotate(-15deg); }
+    20%, 40% { transform: rotate(15deg); }
+    50% { transform: rotate(0); }
+}
         /* STICKY FOOTER TRANG NGOÀI */
         .sticky-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #ffffff !important; padding: 14px 15px; display: flex; gap: 12px; box-shadow: 0 -8px 25px rgba(0,0,0,0.12); z-index: 1000; border-top: 1px solid #e2e8f0; }
         .sticky-footer .btn-instant-buy { animation: ctaShake 4.5s infinite; flex: 1; }
@@ -965,6 +1048,17 @@
     </div>
 </div>
 
+<div id="cartReminderToast" class="cart-reminder-toast">
+    <div class="cart-reminder-content">
+        <i class="fa-solid fa-bell"></i>
+        <span>Có <b id="reminderCount">0</b> món ngon đang chờ bạn trong giỏ hàng kìa! Chốt đơn ngay nhé!</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button class="btn-open-cart-now" onclick="openCartFromReminder()">MUA NGAY</button>
+        <i class="fa-solid fa-xmark close-reminder-x" onclick="closeCartReminder(event)"></i>
+    </div>
+</div>
+
 <script>
     let cart = [];
     
@@ -1184,7 +1278,7 @@
         .catch(err => { console.error(err); alert("Có lỗi xảy ra, anh vui lòng thử lại nhé!"); })
         .finally(() => { submitBtn.innerHTML = "XÁC NHẬN HOÀN TẤT ĐƠN HÀNG"; submitBtn.disabled = false; });
     };
-// --- LOGIC TỰ ĐỘNG HẸN GIỜ NHẠC NHỞ GIỎ HÀNG ---
+// --- HỆ THỐNG TỰ ĐỘNG HẸN GIỜ NHẮC NHỞ KHÁCH HÀNG (BẢN SIÊU CHỐNG LỖI) ---
 let cartReminderTimer = null;
 let cartShakeInterval = null;
 let isReminderDismissed = false;
@@ -1193,33 +1287,43 @@ function checkAndScheduleCartReminder() {
     if (cartReminderTimer) clearTimeout(cartReminderTimer);
     if (cartShakeInterval) clearInterval(cartShakeInterval);
     
+    if (typeof cart === 'undefined' || cart.length === 0 || isReminderDismissed) {
+        hideCartReminderBanner();
+        return;
+    }
+    
     let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    if (totalItems === 0 || isReminderDismissed) {
+    if (totalItems === 0) {
         hideCartReminderBanner();
         return;
     }
 
-    // Tự động lắc nút giỏ hàng nổi mỗi 12 giây
+    // Tự động quét tìm mọi kiểu đặt tên nút giỏ hàng trên trang của anh
+    let cartBtn = document.querySelector('.floating-cart') || document.querySelector('.floating-cart-btn') || document.querySelector('.cart-icon');
+
+    // Kích hoạt hiệu ứng lắc nút mỗi 12 giây
     cartShakeInterval = setInterval(() => {
-        let cartBtn = document.querySelector('.floating-cart-btn');
-        if (cartBtn && !document.querySelector('.side-cart').classList.contains('open')) {
+        if (cartBtn) {
             cartBtn.classList.add('shake-active');
             setTimeout(() => cartBtn.classList.remove('shake-active'), 1200);
         }
     }, 12000);
 
-    // Tự động bật Banner nhắc nhở sau 25 giây bỏ quên
+    // Hẹn giờ hiện Banner (Đặt tạm 3000 tức 3 giây để anh test nhanh, thấy chạy tốt thì sửa thành 25000 anh nhé)
     cartReminderTimer = setTimeout(() => {
-        if (!document.querySelector('.side-cart').classList.contains('open')) {
-            document.getElementById('reminderCount').innerText = totalItems;
-            document.getElementById('cartReminderToast').classList.add('show');
+        let toastElement = document.getElementById('cartReminderToast');
+        let countElement = document.getElementById('reminderCount');
+        
+        if (toastElement && countElement) {
+            countElement.innerText = totalItems;
+            toastElement.classList.add('show');
         }
-    }, 25000); 
+    }, 3000); // <-- Số 3000 này giúp anh kiểm tra kết quả sau 3 giây bỏ quên!
 }
 
 function hideCartReminderBanner() {
     let element = document.getElementById('cartReminderToast');
-    if(element) element.classList.remove('show');
+    if (element) element.classList.remove('show');
 }
 
 function closeCartReminder(event) {
@@ -1231,9 +1335,10 @@ function closeCartReminder(event) {
 
 function openCartFromReminder() {
     hideCartReminderBanner();
-    if (typeof toggleCart === 'function') {
-        toggleCart(true);
-    }
+    // Kích hoạt đồng thời mọi cơ chế mở giỏ hàng thực tế trên file của anh
+    if (typeof toggleCart === 'function') toggleCart(true);
+    let sidebar = document.getElementById('cartSidebar') || document.querySelector('.cart-sidebar');
+    if (sidebar) sidebar.classList.add('active') || sidebar.classList.add('open');
 }
 </script>
 
