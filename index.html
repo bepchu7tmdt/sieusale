@@ -1342,5 +1342,43 @@ function openCartFromReminder() {
 }
 </script>
 
+
+    <!-- MÃ NHÚNG NHẮC NHỞ GIỎ HÀNG TỐI ƯU (BẾP CHÚ 7) -->
+    <style>
+        .cart-reminder-toast {
+            position: fixed; bottom: -150px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 450px; background: #1e293b; color: #ffffff;
+            padding: 14px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 999999; transition: bottom 0.5s ease; border: 1.5px solid #f97316;
+        }
+        .cart-reminder-toast.show { bottom: 24px; }
+        .cart-reminder-content { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+        .btn-open-cart-now { background: #f97316; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; }
+    </style>
+    <div id="cartReminderToast" class="cart-reminder-toast">
+        <div class="cart-reminder-content">
+            <i class="fas fa-bell" style="color: #f97316;"></i>
+            <span>Có món ngon đang chờ, chốt đơn ngay!</span>
+        </div>
+        <button class="btn-open-cart-now" onclick="openCartFromReminder()">MUA NGAY</button>
+    </div>
+    <script>
+        let cartReminderTimer = null;
+        function checkAndScheduleCartReminder() {
+            if (cartReminderTimer) clearTimeout(cartReminderTimer);
+            cartReminderTimer = setTimeout(() => {
+                let toast = document.getElementById('cartReminderToast');
+                if (toast && !document.querySelector('.side-cart').classList.contains('open')) {
+                    toast.classList.add('show');
+                }
+            }, 25000); // 25 giây
+        }
+        function openCartFromReminder() {
+            document.getElementById('cartReminderToast').classList.remove('show');
+            if (typeof toggleCart === 'function') toggleCart(true);
+        }
+    </script>
+
 </body>
 </html>
